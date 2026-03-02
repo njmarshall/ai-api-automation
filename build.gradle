@@ -1,0 +1,154 @@
+// ─────────────────────────────────────────
+// ROOT BUILD — Applies to ALL subprojects
+// ─────────────────────────────────────────
+plugins {
+    id 'java'
+    id 'io.qameta.allure'          version '2.11.2' apply false
+    id 'com.diffplug.spotless'     version '6.22.0' apply false
+}
+
+// ─────────────────────────────────────────
+// SHARED CONFIG FOR ALL SUBPROJECTS
+// ─────────────────────────────────────────
+allprojects {
+    group   = 'com.neil.automation'
+    version = '1.0.0'
+
+    repositories {
+        mavenCentral()
+    }
+}
+
+// ─────────────────────────────────────────
+// JAVA CONFIG FOR ALL SUBPROJECTS
+// ─────────────────────────────────────────
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'io.qameta.allure'
+    apply plugin: 'com.diffplug.spotless'
+
+    java {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    // ── Shared dependency versions ──
+    ext {
+        restAssuredVersion = '5.4.0'
+        testNGVersion      = '7.8.0'
+        allureVersion      = '2.24.0'
+        jacksonVersion     = '2.15.3'
+        log4jVersion       = '2.21.1'
+        assertjVersion     = '3.24.2'
+        openaiVersion      = '1.1.0'
+        lombokVersion      = '1.18.30'
+        fakeDataVersion    = '1.0.2'
+    }
+
+    // ── Dependencies shared by ALL modules ──
+    dependencies {
+
+        // TestNG
+        testImplementation "org.testng:testng:${testNGVersion}"
+
+        // Allure
+        implementation "io.qameta.allure:allure-testng:${allureVersion}"
+        implementation "io.qameta.allure:allure-rest-assured:${allureVersion}"
+
+        // Jackson
+        implementation "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
+        implementation "com.fasterxml.jackson.core:jackson-annotations:${jacksonVersion}"
+
+        // Logging
+        implementation "org.apache.logging.log4j:log4j-api:${log4jVersion}"
+        implementation "org.apache.logging.log4j:log4j-core:${log4jVersion}"
+        implementation "org.apache.logging.log4j:log4j-slf4j2-impl:${log4jVersion}"
+
+        // AssertJ
+        implementation "org.assertj:assertj-core:${assertjVersion}"
+
+        // Lombok
+        compileOnly "org.projectlombok:lombok:${lombokVersion}"
+        annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+        testCompileOnly "org.projectlombok:lombok:${lombokVersion}"
+        testAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+
+        // Faker
+        implementation "com.github.javafaker:javafaker:${fakeDataVersion}"
+    }
+
+    // ── Test config for ALL modules ──
+    test {
+        useTestNG()
+        testLogging {
+            events 'passed', 'skipped', 'failed'
+            exceptionFormat 'full'
+            showStandardStreams = true
+        }
+        outputs.upToDateWhen { false }
+        jvmArgs = [
+            '-Xms256m',
+            '-Xmx1g',
+            '-XX:+UseG1GC',
+            '-Dfile.encoding=UTF-8'
+        ]
+    }
+
+    // ── Code formatting for ALL modules ──
+    spotless {
+        java {
+            googleJavaFormat('1.17.0')
+            removeUnusedImports()
+            trimTrailingWhitespace()
+            endWithNewline()
+        }
+    }
+
+    // ── Allure for ALL modules ──
+    allure {
+        version = '2.24.0'
+        autoconfigure = true
+    }
+
+    compileJava.options.encoding      = 'UTF-8'
+    compileTestJava.options.encoding  = 'UTF-8'
+}
+
+// ─────────────────────────────────────────
+// ROOT LEVEL TASKS
+// ─────────────────────────────────────────
+
+// Run ALL modules tests
+tasks.register('testAll') {
+    dependsOn subprojects.collect { it.tasks.named('test') }
+    description = 'Run tests across ALL modules'
+    group = 'verification'
+}
+
+// Run ALL + generate unified report
+tasks.register('fullRun') {
+    dependsOn 'clean', 'testAll', 'allureReport'
+    description = 'Clean, test all modules, generate report'
+    group = 'verification'
+}
+
+// Print help
+tasks.register('help_automation') {
+    doLast {
+        println """
+        ╔═════════════════════════════════════════════════════╗
+        ║     Neil's AI API Automation — Command Reference    ║
+        ╠═════════════════════════════════════════════════════╣
+        ║  ALL MODULES:                                       ║
+        ║  ./gradlew testAll              → Run all modules   ║
+        ║  ./gradlew fullRun              → Clean+Test+Report ║
+        ║                                                     ║
+        ║  PETSTORE MODULE:                                   ║
+        ║  ./gradlew :petstore:test       → PetStore tests    ║
+        ║  ./gradlew :petstore:allureServe→ PetStore report   ║
+        ╚═════════════════════════════════════════════════════╝
+        """.stripIndent()
+    }
+    description = 'Show all available commands'
+    group = 'help'
+}
