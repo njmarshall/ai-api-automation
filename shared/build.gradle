@@ -1,0 +1,16 @@
+// Shared module — NO test dependencies
+// This is a library used by other modules
+
+description = 'Shared utilities for all automation modules'
+
+dependencies {
+    // RestAssured base
+    implementation "io.rest-assured:rest-assured:${restAssuredVersion}"
+    implementation "io.rest-assured:json-schema-validator:${restAssuredVersion}"
+
+    // OpenAI — AI layer lives here
+    implementation "com.openai:openai-java:${openaiVersion}"
+
+    // HTTP Client
+    implementation 'org.apache.httpcomponents.client5:httpclient5:5.2.1'
+}
