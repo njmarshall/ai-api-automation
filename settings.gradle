@@ -1,0 +1,32 @@
+// ─────────────────────────────────────────
+// ROOT PROJECT
+// ─────────────────────────────────────────
+rootProject.name = 'ai-api-automation'
+
+// ─────────────────────────────────────────
+// ALL MODULES DECLARED HERE
+// ─────────────────────────────────────────
+include(
+    'shared',       // Common utilities (used by all)
+    'petstore'      // PetStore API tests
+)
+
+// ─────────────────────────────────────────
+// PLUGIN MANAGEMENT
+// ─────────────────────────────────────────
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
+// ─────────────────────────────────────────
+// DEPENDENCY RESOLUTION
+// ─────────────────────────────────────────
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
+    repositories {
+        mavenCentral()
+    }
+}
